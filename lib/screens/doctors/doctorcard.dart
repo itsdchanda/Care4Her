@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+
 import '../../const/consts.dart';
-import '../../models/doctormodel.dart';
-import '../../providers/doctorprovider.dart';
-import '../../providers/languageprovider.dart';
+import '../../models/doctor_model.dart';
+import '../../providers/doctor_provider.dart';
 
 class DoctorCardWidget extends StatelessWidget {
   final Function onTap;
-  final DoctorModel doctorModel;
+  final Doctor doctorModel;
   const DoctorCardWidget({
     super.key,
     required this.onTap,
@@ -17,7 +17,6 @@ class DoctorCardWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final locale = context.watch<LanguageProvider>().languageCode;
     return InkWell(
       borderRadius: BorderRadius.circular(Consts.DefaultBorderRadius),
       onTap: () {
@@ -25,12 +24,6 @@ class DoctorCardWidget extends StatelessWidget {
       },
       child: LayoutBuilder(
         builder: (context, constraints) {
-          // final double containerWidth = constraints.maxWidth;
-
-          //   debugPrint(containerWidth.toString());
-          // final double maxWidth = MediaQuery.of(context).size.width * 0.8;
-          // final double width =
-          //     containerWidth > maxWidth ? maxWidth : containerWidth;
           return Container(
             decoration: BoxDecoration(
               border: Border.all(
@@ -38,7 +31,6 @@ class DoctorCardWidget extends StatelessWidget {
               ),
               borderRadius: BorderRadius.circular(Consts.DefaultBorderRadius),
             ),
-            //  width: width,
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               mainAxisSize: MainAxisSize.min,
@@ -51,15 +43,15 @@ class DoctorCardWidget extends StatelessWidget {
                           BorderRadius.circular(Consts.DefaultBorderRadius),
                       child: FutureBuilder(
                         future: context
-                            .read<DoctorProvider>()
-                            .getDoctorImage(doctorModel.doctorimagePath),
+                            .read<MockDoctorProvider>()
+                            .getDoctorImage(doctorModel.imageUrl),
                         builder: (BuildContext context,
                             AsyncSnapshot<Uint8List?> snapshot) {
                           if (snapshot.connectionState ==
                                   ConnectionState.done &&
                               snapshot.hasData) {
-                            return Image.memory(
-                              snapshot.data!,
+                            return Image.network(
+                              doctorModel.imageUrl,
                               errorBuilder: (context, error, stackTrace) =>
                                   const Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
@@ -95,7 +87,7 @@ class DoctorCardWidget extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       Text(
-                        doctorModel.doctorname[locale],
+                        doctorModel.name,
                         textAlign: TextAlign.center,
                         style: const TextStyle(
                           fontWeight: FontWeight.bold,
@@ -105,14 +97,14 @@ class DoctorCardWidget extends StatelessWidget {
                         height: 5,
                       ),
                       Text(
-                        doctorModel.speciality[locale],
+                        doctorModel.specialization,
                         textAlign: TextAlign.center,
                       ),
                       const SizedBox(
                         height: 5,
                       ),
                       Text(
-                        doctorModel.workplace[locale],
+                        doctorModel.hospital,
                         textAlign: TextAlign.center,
                       ),
                     ],

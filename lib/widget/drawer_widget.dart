@@ -153,15 +153,15 @@ class DrawerWidget extends StatelessWidget {
           const SizedBox(
             height: 5,
           ),
-          Text(
-            '${AppLocalizations.of(context)!.age} : ${Utils(context).calculateAge(
-              dateOfBirth: userData.dateofbirth,
-            )}',
-            style: TextStyle(
-              color: Theme.of(context).primaryColor,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
+          // Text(
+          //   '${AppLocalizations.of(context)!.age} : ${Utils(context).calculateAge(
+          //     dateOfBirth: userData.dateofbirth,
+          //   )}',
+          //   style: TextStyle(
+          //     color: Theme.of(context).primaryColor,
+          //     fontWeight: FontWeight.w500,
+          //   ),
+          // ),
         ],
       ),
     );

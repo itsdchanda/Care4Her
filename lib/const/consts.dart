@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 
 class Consts {
   static const THEME_STATUS = "THEME_STATUS";
-  static const BASE_URL = 'https://Care4Her.onrender.com';
+  static const BASE_URL = 'https://mother-care.onrender.com';
   static const PRIVACY_POLICY_URL =
       'https://raw.githubusercontent.com/itsdchanda/Care4Her/master/PRIVACY_POLICY.md';
   // 'https://doc-hosting.flycricket.io/Care4Her-privacy-policy/0320915a-972b-4dc7-b2c7-14a7c27163ee/privacy';

@@ -1,3 +1,4 @@
+import 'package:Care4Her/providers/doctor_provider.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
@@ -115,7 +116,7 @@ class _MyAppState extends State<MyApp> {
           create: (_) => SelfCheckProvider(),
         ),
         ChangeNotifierProvider(
-          create: (_) => DoctorProvider(),
+          create: (_) => MockDoctorProvider(),
         ),
         ChangeNotifierProvider(
           create: (_) => ReminderProvider(),

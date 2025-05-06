@@ -1,19 +1,20 @@
+import 'package:Care4Her/models/doctor_model.dart';
+import 'package:Care4Her/providers/doctor_provider.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:provider/provider.dart';
 import 'package:readmore/readmore.dart';
 import 'package:url_launcher/url_launcher.dart';
+
 import '../../const/consts.dart';
-import '../../models/doctormodel.dart';
-import '../../providers/doctorprovider.dart';
 import '../../providers/languageprovider.dart';
 import '../../utils/utils.dart';
 
-class Doctor extends StatelessWidget {
-  final DoctorModel doctor;
-  const Doctor({
+class DoctorDetail extends StatelessWidget {
+  final Doctor doctor;
+  const DoctorDetail({
     super.key,
     required this.doctor,
   });
@@ -24,7 +25,7 @@ class Doctor extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          doctor.doctorname[locale],
+          doctor.name,
         ),
       ),
       body: LayoutBuilder(
@@ -44,14 +45,14 @@ class Doctor extends StatelessWidget {
                         BorderRadius.circular(Consts.DefaultBorderRadius),
                     child: FutureBuilder(
                       future: context
-                          .watch<DoctorProvider>()
-                          .getDoctorImage(doctor.doctorimagePath),
+                          .watch<MockDoctorProvider>()
+                          .getDoctorImage(doctor.imageUrl),
                       builder: (BuildContext context,
                           AsyncSnapshot<Uint8List?> snapshot) {
                         if (snapshot.connectionState == ConnectionState.done &&
                             snapshot.hasData) {
-                          return Image.memory(
-                            snapshot.data!,
+                          return Image.network(
+                            doctor.imageUrl,
                             fit: BoxFit.fill,
                           );
                         }
@@ -80,7 +81,7 @@ class Doctor extends StatelessWidget {
                   height: 10,
                 ),
                 Text(
-                  doctor.doctorname[locale],
+                  doctor.name,
                   textAlign: TextAlign.center,
                   style: const TextStyle(
                     fontWeight: FontWeight.bold,
@@ -94,20 +95,14 @@ class Doctor extends StatelessWidget {
                   padding: const EdgeInsets.all(8.0),
                   child: Text(
                     // '${doctor.speciality[locale]} ${AppLocalizations.of(context)!.specialist}',
-                    '${doctor.speciality[locale]}',
+                    doctor.specialization,
                     textAlign: TextAlign.center,
                   ),
                 ),
                 // const SizedBox(
                 //   height: 5,
                 // ),
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Text(
-                    doctor.degree[locale],
-                    textAlign: TextAlign.center,
-                  ),
-                ),
+               
                 // const SizedBox(
                 //   height: 20,
                 // ),
@@ -133,7 +128,8 @@ class Doctor extends StatelessWidget {
                                   height: 5,
                                 ),
                                 Text(
-                                    '${Utils(context).formatNumber(number: doctor.experience)}+ ${AppLocalizations.of(context)!.years}'),
+                                    '${doctor.experience}+ ${AppLocalizations.of(context)!.years}'
+                                    ),
                               ],
                             ),
                           ),
@@ -191,7 +187,7 @@ class Doctor extends StatelessWidget {
                 Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: ReadMoreText(
-                    doctor.bioGraphy[locale],
+                    doctor.description,
                     trimLines: 5,
                     colorClickableText: Colors.red,
                     // trimMode: TrimMode.Line,
@@ -211,7 +207,7 @@ class Doctor extends StatelessWidget {
                 ),
                 Card(
                   child: InkWell(
-                    onTap: () => _makePhoneCall(doctor.appointmentNumber),
+                    onTap: () => _makePhoneCall(doctor.phone),
                     borderRadius:
                         BorderRadius.circular(Consts.DefaultBorderRadius),
                     child: ListTile(

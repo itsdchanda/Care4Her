@@ -1,8 +1,9 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'dart:convert';
 
 class ExceptionHandlers {
   //TODO: Add error image
@@ -72,7 +73,11 @@ class ExceptionHandlers {
       case 403: //Forbidden
         throw UnAuthorizedException(jsonDecode(response.body)['message']);
       case 404: //Resource Not Found
-        throw NotFoundException(jsonDecode(response.body)['message']);
+        try {
+          throw NotFoundException(jsonDecode(response.body)['message']);
+        } on FormatException {
+          print("object");
+        }
       // case 500: //Internal Server Error
       default:
         debugPrint('${response.statusCode}');

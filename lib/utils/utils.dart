@@ -1,21 +1,24 @@
-import 'package:age_calculator/age_calculator.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/gestures.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
+
 import '../const/consts.dart';
 import '../providers/languageprovider.dart';
-//import '../providers/nav_bar_provider.dart';
+import '../providers/nav_bar_provider.dart';
 import '../widget/responsivesnackbar.dart';
 
 class Utils {
   BuildContext context;
-  Utils(this.context);
+  Utils(this.context) {
+    initializeDateFormatting();
+  }
   Size get getScreenSize => MediaQuery.of(context).size;
 
   Widget get verticalSpace {
@@ -165,27 +168,32 @@ class Utils {
     }
   }
 
-  String calculateAge({
-    required String dateOfBirth,
-  }) {
-    DateDuration duration;
-    DateFormat dateFormat = DateFormat('EEE, dd MMMM yyyy', 'en');
-    DateTime parsedDate = dateFormat.parse(dateOfBirth);
+  // String calculateAge({
+  //   required String dateOfBirth,
+  // }) {
+  //   DateDuration duration;
+  //   try {
+  //     DateFormat dateFormat = DateFormat('EEE, dd MMMM yyyy', 'en');
+  //     DateTime parsedDate = dateFormat.parse(dateOfBirth);
+  //     duration = AgeCalculator.age(parsedDate);
+  //   } catch (e) {
+  //     // Fallback in case of formatting errors
+  //     DateTime parsedDate = DateTime.parse(dateOfBirth);
+  //     duration = AgeCalculator.age(parsedDate);
+  //   }
 
-    duration = AgeCalculator.age(parsedDate);
-
-    String ageString = '${checkEmpty(
-      duration: duration.years,
-      days: AppLocalizations.of(context)!.year,
-    )}${checkEmpty(
-      duration: duration.months,
-      days: AppLocalizations.of(context)!.month,
-    )}${checkEmpty(
-      duration: duration.days,
-      days: AppLocalizations.of(context)!.day,
-    )}';
-    return ageString;
-  }
+  //   String ageString = '${checkEmpty(
+  //     duration: duration.years,
+  //     days: AppLocalizations.of(context)!.year,
+  //   )}${checkEmpty(
+  //     duration: duration.months,
+  //     days: AppLocalizations.of(context)!.month,
+  //   )}${checkEmpty(
+  //     duration: duration.days,
+  //     days: AppLocalizations.of(context)!.day,
+  //   )}';
+  //   return ageString;
+  // }
 
   RichText boldsentenceword({
     required String text,
@@ -320,17 +328,17 @@ class Utils {
     );
   }
 
-  //void showLicense() {
-   // showLicensePage(
-     // context: context,
-      //applicationIcon: const Care4HerLogo(),
-     // applicationName: AppLocalizations.of(context)!.appname,
-    //  applicationVersion:
-       //   '${AppLocalizations.of(context)!.version} : ${context.read<NavBarProvider>().appVersionInfo(
-             //   locale: context.read<LanguageProvider>().languageCode,
-            //  )}',
-   //   applicationLegalese:
-     //     '© ${formatNumber(number: DateTime.now().year)} ${AppLocalizations.of(context)!.creditdevelopername1}',
-    //);
-  //}
+  void showLicense() {
+    showLicensePage(
+      context: context,
+      //applicationIcon: const MothercareLogo(),
+      applicationName: AppLocalizations.of(context)!.appname,
+      applicationVersion:
+          '${AppLocalizations.of(context)!.version} : ${context.read<NavBarProvider>().appVersionInfo(
+                locale: context.read<LanguageProvider>().languageCode,
+              )}',
+      applicationLegalese:
+          '© ${formatNumber(number: DateTime.now().year)} ${AppLocalizations.of(context)!.creditdevelopername1}',
+    );
+  }
 }

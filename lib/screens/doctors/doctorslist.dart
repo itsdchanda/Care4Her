@@ -1,16 +1,16 @@
+import 'package:Care4Her/screens/doctors/doctor.dart';
 import 'package:chips_choice/chips_choice.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
-import '../../models/doctormodel.dart';
-import '../../providers/doctorprovider.dart';
-import '../../providers/languageprovider.dart';
+
+import '../../models/doctor_model.dart';
+import '../../providers/doctor_provider.dart';
 import '../../utils/exception_hander.dart';
 import '../../utils/utils.dart';
 import '../../widget/emptywidget.dart';
 import '../../widget/errorwidget.dart';
 import '../../widget/responsivegridview.dart';
-import 'doctor.dart';
 import 'doctorcard.dart';
 import 'doctorlistshimmer.dart';
 
@@ -21,16 +21,21 @@ class DoctorsList extends StatelessWidget {
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
     final viewPadding = MediaQuery.of(context).viewPadding;
-    return Consumer<DoctorProvider>(
+    return Consumer<MockDoctorProvider>(
       builder: (context, doctorProvider, child) {
         var doctorLocations = getAllDoctorLocations(
-          doctorlist: doctorProvider.doctorlist,
-          locale: context.watch<LanguageProvider>().languageCode,
+          doctorlist: doctorProvider.doctors,
         );
-        List<DoctorModel> filterdoctorList = getFilteredDoctor(
-          doctorlist: doctorProvider.doctorlist,
-          locale: context.watch<LanguageProvider>().languageCode,
-          searchQuery: context.read<DoctorProvider>().filterChoice,
+        List<Doctor> filteredDoctorList = getFilteredDoctor(
+          doctorlist: doctorProvider.doctors,
+          searchQuery: doctorProvider.filteredDoctors.isEmpty
+              ? []
+              : doctorLocations
+                  .where((location) => doctorProvider.filteredDoctors.any(
+                      (doctor) =>
+                          doctor.location.toLowerCase() ==
+                          location.toLowerCase()))
+                  .toList(),
         );
         return Scaffold(
           appBar: AppBar(
@@ -45,6 +50,7 @@ class DoctorsList extends StatelessWidget {
                           child: _doctorFilterWidget(
                             context: context,
                             doctorLocations: doctorLocations,
+                            doctorProvider: doctorProvider,
                           ),
                         );
                       },
@@ -55,21 +61,21 @@ class DoctorsList extends StatelessWidget {
                   : const SizedBox(),
             ],
           ),
-          body: filterdoctorList.isNotEmpty
+          body: filteredDoctorList.isNotEmpty
               ? SingleChildScrollView(
                   physics: const AlwaysScrollableScrollPhysics(),
                   child: Padding(
                     padding: const EdgeInsets.all(16.0),
                     child: ResponsiveGridView(
-                      itemCount: filterdoctorList.length,
+                      itemCount: filteredDoctorList.length,
                       itemBuilder: (context, index) {
-                        var doctordata = filterdoctorList[index];
+                        var doctorData = filteredDoctorList[index];
                         return DoctorCardWidget(
-                          doctorModel: doctordata,
+                          doctorModel: doctorData,
                           onTap: () async {
                             await Utils(context).push(
-                              widget: Doctor(
-                                doctor: doctordata,
+                              widget: DoctorDetail(
+                                doctor: doctorData,
                               ),
                             );
                           },
@@ -78,98 +84,111 @@ class DoctorsList extends StatelessWidget {
                     ),
                   ),
                 )
-              : FutureBuilder<List<DoctorModel>>(
-                  future: doctorProvider.doctorsList(),
-                  builder: (context, snapshot) {
-                    if (snapshot.hasData &&
-                        snapshot.connectionState == ConnectionState.done) {
-                      List<DoctorModel> doctors = snapshot.data!;
+              : doctorProvider.isLoading
+                  ? const DoctorsListShimmer()
+                  : FutureBuilder<void>(
+                          future: doctorProvider.fetchDoctors(),
+                          builder: (context, snapshot) {
+                        if (doctorProvider.doctors.isNotEmpty) {
+                          List<Doctor> doctors = doctorProvider.doctors;
 
-                      if (doctors.isEmpty) {
-                        return EmptyWidget(
-                          onRefresh: () => doctorProvider.refresh(),
-                          viewPadding: viewPadding,
-                          size: size,
-                          svgAsset: 'assets/images/doctor.svg',
-                          message: AppLocalizations.of(context)!.nodoctorfound,
-                        );
-                      }
+                          if (doctors.isEmpty) {
+                            return EmptyWidget(
+                              onRefresh: () => doctorProvider.fetchDoctors(),
+                              viewPadding: viewPadding,
+                              size: size,
+                              svgAsset: 'assets/images/doctor.svg',
+                              message:
+                                  AppLocalizations.of(context)!.nodoctorfound,
+                            );
+                          }
 
-                      return RefreshIndicator(
-                        color: Theme.of(context).primaryColor,
-                        onRefresh: () => doctorProvider.refresh(),
-                        child: SingleChildScrollView(
-                          physics: const AlwaysScrollableScrollPhysics(),
-                          child: Padding(
-                            padding: const EdgeInsets.all(16.0),
-                            child: ResponsiveGridView(
-                              itemCount: doctors.length,
-                              itemBuilder: (context, index) {
-                                var doctordata = doctors[index];
-                                return DoctorCardWidget(
-                                  doctorModel: doctordata,
-                                  onTap: () async {
-                                    await Utils(context).push(
-                                      widget: Doctor(
-                                        doctor: doctordata,
-                                      ),
+                          return RefreshIndicator(
+                            color: Theme.of(context).primaryColor,
+                            onRefresh: () => doctorProvider.fetchDoctors(),
+                            child: SingleChildScrollView(
+                              physics: const AlwaysScrollableScrollPhysics(),
+                              child: Padding(
+                                padding: const EdgeInsets.all(16.0),
+                                child: ResponsiveGridView(
+                                  itemCount: doctors.length,
+                                  itemBuilder: (context, index) {
+                                    var doctorData = doctors[index];
+                                    return DoctorCardWidget(
+                                      doctorModel: doctorData,
+                                      onTap: () async {
+                                        await Utils(context).push(
+                                          widget: DoctorDetail(
+                                            doctor: doctorData,
+                                          ),
+                                        );
+                                      },
                                     );
                                   },
-                                );
-                              },
+                                ),
+                              ),
                             ),
-                          ),
-                        ),
-                      );
-                    }
+                          );
+                        }
 
-                    if (snapshot.hasError) {
-                      var error = snapshot.error as ErrorModel;
+                        if (doctorProvider.errorMessage.isNotEmpty) {
+                          var error = ErrorModel(
+                            url: "error",
+                            message: doctorProvider.errorMessage,
+                          );
 
-                      return CustomErrorWidget(
-                        onRefresh: () => doctorProvider.refresh(),
-                        svgAsset: error.url,
-                        message: error.message,
-                        size: size,
-                        viewPadding: viewPadding,
-                      );
-                    }
+                          return CustomErrorWidget(
+                            onRefresh: () => doctorProvider.fetchDoctors(),
+                            svgAsset: error.url,
+                            message: error.message,
+                            size: size,
+                            viewPadding: viewPadding,
+                          );
+                        }
 
-                    return const DoctorsListShimmer();
-                  },
-                ),
+                        return const DoctorsListShimmer();
+                      },
+                    ),
         );
       },
     );
   }
 
-  List<DoctorModel> getFilteredDoctor({
+  List<Doctor> getFilteredDoctor({
     required List<String> searchQuery,
-    required List<DoctorModel> doctorlist,
-    required String locale,
+    required List<Doctor> doctorlist,
   }) {
+    if (searchQuery.isEmpty) return doctorlist;
+
     return doctorlist.where((doctor) {
-      final doctorLocation = doctor.location[locale].toString().toLowerCase();
+      final doctorLocation = doctor.location.toString().toLowerCase();
       return searchQuery
           .any((query) => doctorLocation.contains(query.toLowerCase()));
     }).toList();
   }
 
-  List<String> getAllDoctorLocations(
-      {required List<DoctorModel> doctorlist, required String locale}) {
+  List<String> getAllDoctorLocations({
+    required List<Doctor> doctorlist,
+  }) {
     Set<String> uniqueLocations = <String>{};
-    for (DoctorModel doctor in doctorlist) {
-      uniqueLocations.add(doctor.location[locale]);
+    for (Doctor doctor in doctorlist) {
+      uniqueLocations.add(doctor.location);
     }
     List<String> doctorLocations = uniqueLocations.toList()..sort();
     return doctorLocations;
   }
 
-  _doctorFilterWidget({
+  Widget _doctorFilterWidget({
     required BuildContext context,
     required List<String> doctorLocations,
+    required MockDoctorProvider doctorProvider,
   }) {
     final formKey = GlobalKey<FormState>();
+    List<String> selectedLocations = doctorLocations
+        .where((location) => doctorProvider.filteredDoctors.any((doctor) =>
+            doctor.location.toLowerCase() == location.toLowerCase()))
+        .toList();
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
       mainAxisSize: MainAxisSize.min,
@@ -206,28 +225,23 @@ class DoctorsList extends StatelessWidget {
                 child: Column(
                   children: [
                     SizedBox(
-                      // color: Colors.green,
-                      // alignment: Alignment.centerLeft,
                       child: FormField<List<String>>(
                         autovalidateMode: AutovalidateMode.always,
-                        initialValue:
-                            context.read<DoctorProvider>().filterChoice,
-                        onSaved: (val) => context
-                            .read<DoctorProvider>()
-                            .filterChoice = val ?? [],
+                        initialValue: selectedLocations,
+                        onSaved: (val) {
+                          if (val != null && val.isNotEmpty) {
+                            doctorProvider.filterByLocation(val);
+                          }
+                        },
                         validator: (value) {
                           if (value?.isEmpty ?? value == null) {
                             return AppLocalizations.of(context)!
                                 .filterDoctorListError;
                           }
-                          // if (value!.length > 5) {
-                          //   return "Can't select more than 5 categories";
-                          // }
                           return null;
                         },
                         builder: (state) {
                           return Column(
-                            // crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               ChipsChoice<String>.multiple(
                                 value: state.value ?? [],
@@ -289,13 +303,7 @@ class DoctorsList extends StatelessWidget {
                         Flexible(
                           child: ElevatedButton(
                             onPressed: () {
-                              context.read<DoctorProvider>().filterChoice = [];
-                              // context
-                              //     .read<DoctorProvider>()
-                              //     .filterdoctorList
-                              //     .clear();
-                              //     filterdoctorList.
-
+                              doctorProvider.resetFilters();
                               formKey.currentState!.reset();
                               Navigator.pop(context);
                             },
